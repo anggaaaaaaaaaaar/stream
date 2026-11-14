@@ -23,9 +23,7 @@ jobs:
           const association = context.payload.comment.author_association;
           const allowed = ['OWNER', 'MEMBER'];
 
-          const isAllowed =
-            login === 'Luna712' ||
-            allowed.includes(association);
+          const isAllowed = allowed.includes(association);
 
           if (!isAllowed) {
             core.setFailed(`User ${login} is not permitted to trigger this workflow.`);
