@@ -122,7 +122,7 @@ fragments; TV-specific code (`ResultFragmentTv`, alternate layouts) branches on 
 | Network | `network/` + `nicehttp` | Global `app` client. `CloudflareKiller`, `DdosGuardKiller` interceptors, DNS-over-HTTPS providers. `library/.../network/WebViewResolver` for sites that need a WebView. |
 | Casting | `utils/CastHelper.kt`, `ui/ControllerActivity.kt`, `actions/temp/fcast/` | Chromecast and FCast. |
 | External players | `actions/`, `actions/temp/` | `VideoClickAction` subclasses (VLC, MPV, Just Player, torrent clients, copy link, ...). Plugins can register more. |
-| App updates | `utils/InAppUpdater.kt`, `ui/settings/ApkUpdater.kt` | GitHub releases. |
+| App updates | `utils/InAppUpdater.kt`, `ui/settings/ApkUpdater.kt` | GitHub releases of `anggaaaaaaaaaaar/stream-base` (`GithubReleases.APK_USERNAME/APK_REPOSITORY`). Stable reads the newest non-prerelease asset named `*-X.Y.Z.apk`; pre-release compares the `pre-release` tag's commit with the build's. |
 | Android TV | `utils/TvChannelUtils.kt` | TV home channels. |
 | Crash handling | `CloudStreamApp.kt`, `AcraApplication.kt` | Writes crash logs and the currently loading plugin. |
 
@@ -183,5 +183,10 @@ There are no tests for individual extractors or plugins; they depend on live web
 `.github/workflows/`:
 
 - `pull_request.yml`: `library:checkKotlinAbi`, then `assemblePrereleaseDebug lint check`.
-- `prerelease.yml`: signed `assemblePrereleaseRelease androidSourcesJar makeJar` on push to `master` (skips `*.md`-only changes).
-- `instrumented-tests.yml`, `generate_dokka.yml`, `build_to_archive.yml`, `update_locales.yml` (Weblate).
+- `prerelease.yml`: signed `assemblePrereleaseRelease` on push to `master`, published as the `pre-release` GitHub release.
+- `release.yml`: signed `assembleStableRelease` on tag `vX.Y.Z` (must equal `versionName`), published as `CineVault-X.Y.Z.apk`.
+- `instrumented-tests.yml` (`/run-tests` comment by OWNER/MEMBER), `update_locales.yml` (Weblate).
+
+Release jobs run on `vars.RELEASE_RUNNER` (a self-hosted runner on the owner's mini PC, label `minipc`) or `ubuntu-latest`.
+The repo is public, so those two workflows must only trigger on pushes to `master` or tags. Signing uses secrets
+`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD` (store and key), `KEYSTORE_ALIAS`. Actions are pinned to SHAs; Dependabot updates them.

@@ -6,7 +6,8 @@ how to change it without breaking things.
 ## What this is
 
 CloudStream: an extension-based Android media player (Kotlin). Sources come from runtime-loaded plugins
-(`.cs3` files). This repo is a fork of `recloudstream/cloudstream` with no code changes yet (see `ARCHITECTURE.md`).
+(`.cs3` files). This repo is a fork of `recloudstream/cloudstream`, released as CineVault (`applicationId`
+`com.cinevault.app`; Kotlin packages are still `com.lagradost.*`). Updates and releases come from this repo, not upstream.
 To sync: `git fetch https://github.com/recloudstream/cloudstream master` and merge into `master`.
 
 Modules: `library` (public plugin API, KMP), `app` (Android app), `shared` (Compose Multiplatform UI + MVI view models),
