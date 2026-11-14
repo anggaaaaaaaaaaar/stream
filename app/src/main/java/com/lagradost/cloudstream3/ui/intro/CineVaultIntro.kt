@@ -82,6 +82,7 @@ private class CineVaultIntroView(context: Context) : View(context) {
         ContextCompat.getDrawable(context, R.drawable.ic_cinevault_wordmark)!!.mutate()
     private val background = ContextCompat.getColor(context, R.color.ic_launcher_background)
     private val red = ContextCompat.getColor(context, R.color.cinevault_red)
+    private val mint = ContextCompat.getColor(context, R.color.cinevault_mint)
     private val density = resources.displayMetrics.density
     private val splashLogoSize = resources.getDimension(R.dimen.cinevault_splash_logo_size)
 
@@ -171,28 +172,31 @@ private class CineVaultIntroView(context: Context) : View(context) {
         val left = cx - size / 2f
         val top = logoCy - size / 2f
 
-        val glow = 0.85f * progress(200f, 550f) - 0.45f * progress(550f, 1000f)
+        // The play button's centre in the emblem: 81% across, 49% down.
+        val playX = left + size * 0.81f
+        val playY = top + size * 0.49f
+
+        // The glow sits on the play button: a red wash over the whole green emblem turns muddy.
+        val glow = 0.9f * progress(200f, 550f) - 0.6f * progress(550f, 1000f)
         if (glow > 0f) {
-            val r = size * 0.8f
+            val r = size * 0.5f
             glowPaint.shader = RadialGradient(
-                cx, logoCy, r,
+                playX, playY, r,
                 intArrayOf(withAlpha(red, glow), withAlpha(red, glow * 0.35f), Color.TRANSPARENT),
-                floatArrayOf(0f, 0.55f, 1f),
+                floatArrayOf(0f, 0.5f, 1f),
                 Shader.TileMode.CLAMP
             )
-            canvas.drawCircle(cx, logoCy, r, glowPaint)
+            canvas.drawCircle(playX, playY, r, glowPaint)
         }
 
-        // The play button sits at about 65% across the logo.
-        val sparkX = left + size * 0.65f
         for (spark in sparks) {
             val t = progress(spark.delay, spark.delay + 430f)
             if (t <= 0f || t >= 1f) continue
             val d = decelerate.getInterpolation(t) * spark.distance * size
             sparkPaint.alpha = ((1f - t) * 255).toInt()
             canvas.drawCircle(
-                sparkX + cos(spark.angle) * d,
-                logoCy + sin(spark.angle) * d,
+                playX + cos(spark.angle) * d,
+                playY + sin(spark.angle) * d,
                 spark.radius * density * (1f - 0.5f * t),
                 sparkPaint
             )
@@ -220,13 +224,13 @@ private class CineVaultIntroView(context: Context) : View(context) {
             val barLeft = cx - barWidth / 2f
             val barTop = wmTop + wordmarkHeight + gap
             val radius = barHeight / 2f
-            barPaint.color = withAlpha(Color.WHITE, 0.18f * textIn)
+            barPaint.color = withAlpha(mint, 0.18f * textIn)
             canvas.drawRoundRect(
                 barLeft, barTop, barLeft + barWidth, barTop + barHeight, radius, radius, barPaint
             )
             val fill = decelerate.getInterpolation(progress(950f, 1500f))
             if (fill > 0f) {
-                barPaint.color = withAlpha(Color.WHITE, 0.85f * textIn)
+                barPaint.color = withAlpha(mint, 0.85f * textIn)
                 canvas.drawRoundRect(
                     barLeft, barTop, barLeft + barWidth * fill, barTop + barHeight,
                     radius, radius, barPaint
