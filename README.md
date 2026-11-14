@@ -1,7 +1,7 @@
 # CloudStream
 
 **⚠️ Warning: By default, this app doesn't provide any video sources; you have to install extensions to add functionality to the app.**
-<p align="left"><a href="https://github.com/anggaaaaaaaaaaar/stream/releases/download/pre-release/app-prerelease-release.apk"><img src=".github/images/download-cloudstream-pre.png" alt="Download Cloudstream Pre-Release" width=430/></a></p>
+<p align="left"><a href="https://github.com/anggaaaaaaaaaaar/stream-base/releases/download/pre-release/app-prerelease-release.apk"><img src=".github/images/download-cloudstream-pre.png" alt="Download Cloudstream Pre-Release" width=430/></a></p>
 
 [![Discord](https://invidget.switchblade.xyz/5Hus6fM)](https://discord.gg/5Hus6fM)
 
@@ -68,17 +68,17 @@ We **happily** accept any contributions to our project. To find out where you ca
 <a id="issues"></a> 
  
 ### Issues: 
-While we **actively** accept issues and pull requests, we do require you fill out an [template](https://github.com/anggaaaaaaaaaaar/stream/issues/new/choose) for issues. These include the following:
+While we **actively** accept issues and pull requests, we do require you fill out an [template](https://github.com/anggaaaaaaaaaaar/stream-base/issues/new/choose) for issues. These include the following:
 
 <a id="bug_report"></a>
 
-- [Bug Report Template: ](https://github.com/anggaaaaaaaaaaar/stream/issues/new?assignees=&labels=bug&projects=&template=application-bug.yml)
+- [Bug Report Template: ](https://github.com/anggaaaaaaaaaaar/stream-base/issues/new?assignees=&labels=bug&projects=&template=application-bug.yml)
   - For bug reports, we want as much info as possible, including your downloaded version of CloudeStream, device and updated version (if possible, current API),
     expected behavior of the program, and the actual behavior that the program did, most importantly we require clear, reproducible steps of the bug. If your bug can't be       reproduced, it is unlikely we'll work on your issue.
     
 <a id="enhancment"></a>
   
-- [Feature Request Template: ](https://github.com/anggaaaaaaaaaaar/stream/issues/new?assignees=&labels=enhancement&projects=&template=feature-request.yml)
+- [Feature Request Template: ](https://github.com/anggaaaaaaaaaaar/stream-base/issues/new?assignees=&labels=enhancement&projects=&template=feature-request.yml)
   - Before adding a feature request, please check to see if a feature request already has been requested.  
 
 

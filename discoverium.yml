@@ -3,6 +3,6 @@ app:
   authors: anggaaaaaaaaaaar
   category: entertainment
   description: Android app for streaming and downloading media.
-  icon: https://raw.githubusercontent.com/anggaaaaaaaaaaar/stream/refs/heads/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+  icon: https://raw.githubusercontent.com/anggaaaaaaaaaaar/stream-base/refs/heads/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
   releases:
-    url: https://github.com/anggaaaaaaaaaaar/stream/releases
+    url: https://github.com/anggaaaaaaaaaaar/stream-base/releases

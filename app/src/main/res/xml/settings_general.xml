@@ -83,10 +83,10 @@
         <Preference
             android:icon="@drawable/ic_github_logo"
             android:title="@string/github"
-            app:summary="https://github.com/anggaaaaaaaaaaar/stream">
+            app:summary="https://github.com/anggaaaaaaaaaaar/stream-base">
             <intent
                 android:action="android.intent.action.VIEW"
-                android:data="https://github.com/anggaaaaaaaaaaar/stream" />
+                android:data="https://github.com/anggaaaaaaaaaaar/stream-base" />
         </Preference>
 
         <Preference

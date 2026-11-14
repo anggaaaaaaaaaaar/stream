@@ -2076,7 +2076,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
     suspend fun checkGithubConnectivity(): Boolean {
         return try {
             app.get(
-                "https://raw.githubusercontent.com/anggaaaaaaaaaaar/stream/master/.github/connectivitycheck",
+                "https://raw.githubusercontent.com/anggaaaaaaaaaaar/stream-base/master/.github/connectivitycheck",
                 timeout = 5
             ).text.trim() == "ok"
         } catch (t: Throwable) {
