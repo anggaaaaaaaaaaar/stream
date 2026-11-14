@@ -1723,8 +1723,6 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             .setPopUpTo(navController.graph.startDestination, false)
             .build()*/
 
-        val rippleColor = ColorStateList.valueOf(getResourceColor(R.attr.colorPrimary, 0.1f))
-
         binding?.navView?.apply {
             val pillHighlight = ColorStateList.valueOf(getColor(R.color.navIndicator))
             itemRippleColor = pillHighlight
@@ -1741,8 +1739,9 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         binding?.navRailView?.apply {
             if (isLayout(PHONE)) {
-                itemRippleColor = rippleColor
-                itemActiveIndicatorColor = rippleColor
+                val railHighlight = ColorStateList.valueOf(getColor(R.color.navIndicator))
+                itemRippleColor = railHighlight
+                itemActiveIndicatorColor = railHighlight
             } else {
                 val rippleColor = ColorStateList.valueOf(getResourceColor(R.attr.textColor, 1.0f))
                 val rippleColorTransparent =

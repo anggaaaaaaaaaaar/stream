@@ -762,6 +762,12 @@
         <item name="shapeAppearance">@style/NavPillIndicatorShape</item>
     </style>
 
+    <style name="NavRailIndicator" parent="Widget.Material3.NavigationRailView.ActiveIndicator">
+        <item name="android:width">48dp</item>
+        <item name="android:height">44dp</item>
+        <item name="shapeAppearance">@style/NavPillIndicatorShape</item>
+    </style>
+
     <style name="NavPillIndicatorShape">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">16dp</item>
