@@ -2,6 +2,8 @@
     <!-- Base application theme. Material3 -->
     <style name="AppTheme" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:windowSplashScreenBackground" tools:targetApi="s">@color/ic_launcher_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="s">@drawable/ic_launcher_foreground</item>
         <item name="android:colorEdgeEffect">?attr/textColor</item>
 
         <item name="android:navigationBarColor">?attr/primaryBlackBackground</item>

@@ -106,6 +106,7 @@ import com.lagradost.cloudstream3.ui.WatchType
 import com.lagradost.cloudstream3.ui.account.AccountHelper.showAccountSelectLinear
 import com.lagradost.cloudstream3.ui.download.DOWNLOAD_NAVIGATE_TO
 import com.lagradost.cloudstream3.ui.home.HomeViewModel
+import com.lagradost.cloudstream3.ui.intro.CineVaultIntro
 import com.lagradost.cloudstream3.ui.library.LibraryViewModel
 import com.lagradost.cloudstream3.ui.player.BasicLink
 import com.lagradost.cloudstream3.ui.player.GeneratorPlayer
@@ -1284,6 +1285,8 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             showToast(txt(R.string.unable_to_inflate, t.message ?: ""), Toast.LENGTH_LONG)
             null
         }
+
+        if (savedInstanceState == null) CineVaultIntro.playOnce(this)
 
         binding?.apply {
             fixSystemBarsPadding(
