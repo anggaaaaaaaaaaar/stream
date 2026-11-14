@@ -27,6 +27,8 @@ List every difference from upstream in "Fork changes" below.
   so sort and year only act on what is loaded, and only a single section pages further. The phone bar holds 5 items
   (`menu/bottom_nav_menu.xml`, Downloads moved to a button in the home header); the rail uses `menu/nav_rail_menu.xml`
   with all 6.
+- TV home hero (`fragment_home_head_tv.xml`): left-to-right navy scrim (`tv_hero_scrim.xml`), larger title, gold
+  `★ score` instead of the colored badge, plot limited to 520dp. The TV side rail and its focus handling are unchanged.
 - Releases and the in-app updater point at this fork (PR #2, #4): signed pre-release on push to `master`,
   signed stable `CineVault-X.Y.Z.apk` on tag `vX.Y.Z`, built on the `minipc` self-hosted runner. See CI below.
 - Online accounts are off (`AccountManager.ONLINE_ACCOUNTS_ENABLED = false`): the fork has no MAL, AniList or Simkl

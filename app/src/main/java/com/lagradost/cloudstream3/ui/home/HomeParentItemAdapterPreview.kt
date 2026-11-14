@@ -61,7 +61,6 @@ import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarMargin
 import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarView
 import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.utils.UIHelper.populateChips
-import androidx.core.graphics.toColorInt
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
 
 private const val MAX_DOTS = 6
@@ -352,19 +351,7 @@ class HomeParentItemAdapterPreview(
                 val scoreText = item.score?.toStringNull(0.1, 10, 1, false)
 
                 scoreText?.let { score ->
-                    homePreviewScore.text =
-                        homePreviewScore.context.getString(R.string.extension_rating, score)
-
-                    // while it should never fail, we do this just in case
-                    val rating = score.toDoubleOrNull() ?: item.score?.toDouble() ?: 0.0
-
-                    val color = when {
-                        rating < 5.0 -> "#eb2f2f".toColorInt() // Red
-                        rating < 8.0 -> "#eda009".toColorInt() // Yellow
-                        else -> "#3bb33b".toColorInt() // Green
-                    }
-                    homePreviewScore.backgroundTintList =
-                        android.content.res.ColorStateList.valueOf(color)
+                    homePreviewScore.text = "\u2605 $score"
                 }
                 homePreviewScore.isGone = scoreText == null
 

@@ -42,12 +42,13 @@
                 android:backgroundTint="@color/transparent"
                 android:focusable="true"
                 android:foreground="@drawable/outline_drawable"
+                app:cardElevation="0dp"
                 android:nextFocusLeft="@id/home_preview_hidden_prev_focus"
                 android:nextFocusRight="@id/home_preview_hidden_next_focus"
                 android:nextFocusUp="@id/home_change_api"
                 android:nextFocusDown="@id/home_watch_child_recyclerview"
 
-                app:cardCornerRadius="@dimen/rounded_image_radius">
+                app:cardCornerRadius="16dp">
 
                 <androidx.viewpager2.widget.ViewPager2
                     android:id="@+id/home_preview_viewpager"
@@ -64,12 +65,15 @@
                     android:id="@+id/home_preview_viewpager_text"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@drawable/player_gradient_tv"
+                    android:background="@drawable/tv_hero_scrim"
                     android:layout_gravity="bottom"
                     android:layout_marginStart="@dimen/navbar_width"
                     android:gravity="bottom"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:paddingStart="32dp"
+                    android:paddingTop="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingBottom="28dp">
 
                     <ImageView
                         android:id="@+id/home_background_poster_watermark_badge_holder"
@@ -90,7 +94,7 @@
                         android:layout_marginTop="10dp"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:textSize="25sp"
+                        android:textSize="32sp"
                         android:textStyle="bold"
                         android:shadowColor="#B0000000"
                         android:shadowDx="0"
@@ -110,15 +114,11 @@
                             android:id="@+id/home_preview_score"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:background="@drawable/rating_bg_color"
-                            android:textColor="@color/white"
+                            android:textColor="@color/ratingStar"
+                            android:textSize="15sp"
                             android:textStyle="bold"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
                             android:layout_marginEnd="12dp"
-                            tools:text="IMDb : 8.5" />
+                            tools:text="★ 8.5" />
 
                         <TextView
                             android:id="@+id/home_preview_year"
@@ -139,7 +139,7 @@
 
                     <TextView
                         android:id="@+id/home_preview_description"
-                        android:layout_width="match_parent"
+                        android:layout_width="520dp"
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="3"
