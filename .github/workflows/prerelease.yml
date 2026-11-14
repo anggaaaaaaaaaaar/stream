@@ -64,14 +64,16 @@ jobs:
 
     # Self-hosted runners keep Gradle and Kotlin daemons between jobs. A daemon left over
     # from a cancelled run is shared with the next build and can run it out of heap, so
-    # stop old daemons and compile Kotlin inside a single, short-lived Gradle process.
+    # stop old daemons first. Upstream also built androidSourcesJar/makeJar here for plugin
+    # developers; makeJar depends on the full `build` (every variant, lint, tests) and ran
+    # the runner out of memory, so this fork only builds the APK.
     - name: Stop leftover Gradle daemons
       run: |
         ./gradlew --stop || true
         pkill -u "$(id -u)" -f KotlinCompileDaemon || true
 
     - name: Run Gradle
-      run: ./gradlew --no-daemon -Pkotlin.compiler.execution.strategy=in-process assemblePrereleaseRelease androidSourcesJar makeJar
+      run: ./gradlew --no-daemon assemblePrereleaseRelease
       env:
         SIGNING_KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS || 'key0' }}
         SIGNING_STORE_FILE: ${{ steps.fetch_keystore.outputs.store_file }}
@@ -101,6 +103,4 @@ jobs:
           --target "${GITHUB_SHA}" \
           --title "Pre-release Build" \
           --notes "Built from ${GITHUB_SHA}" \
-          app/build/outputs/apk/prerelease/release/*.apk \
-          app/build/libs/app-sources.jar \
-          app/build/classes.jar
+          app/build/outputs/apk/prerelease/release/*.apk
