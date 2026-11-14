@@ -19,6 +19,14 @@ import java.util.concurrent.TimeUnit
 abstract class AccountManager {
     companion object {
         const val NONE_ID: Int = -1
+
+        /**
+         * CineVault: online accounts (MAL, AniList, Simkl, Kitsu, OpenSubtitles, Subdl, AnimeSkip)
+         * are turned off because this fork ships without their API keys. Login entry points are
+         * hidden and stored tokens are ignored. Bookmarks, watch history and the library keep
+         * working from local storage (LocalList, DataStoreHelper). Set to true to bring them back.
+         */
+        const val ONLINE_ACCOUNTS_ENABLED: Boolean = false
         val malApi = MALApi()
         val kitsuApi = KitsuApi()
         val aniListApi = AniListApi()
