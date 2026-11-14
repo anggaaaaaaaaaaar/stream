@@ -1,10 +1,16 @@
 package com.lagradost.cloudstream3.ui.home
 
+import android.content.Context
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.view.isGone
 import com.lagradost.cloudstream3.LoadResponse
+import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.databinding.HomeScrollViewBinding
 import com.lagradost.cloudstream3.databinding.HomeScrollViewTvBinding
 import com.lagradost.cloudstream3.ui.BaseDiffCallback
@@ -16,6 +22,28 @@ import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.AppContextUtils.html
 import com.lagradost.cloudstream3.utils.ImageLoader.loadImage
+
+/** "★ 8.0 · 2026 · Adventure" for the phone hero. Parts the provider did not fill are left out. */
+private fun heroMeta(context: Context, item: LoadResponse): CharSequence {
+    val out = SpannableStringBuilder()
+    item.score?.toStringNull(0.1, 10, 1, false)?.let { score ->
+        val start = out.length
+        out.append("\u2605 ").append(score)
+        out.setSpan(
+            ForegroundColorSpan(ContextCompat.getColor(context, R.color.ratingStar)),
+            start,
+            out.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+    }
+    val rest = listOfNotNull(item.year?.toString(), item.tags?.firstOrNull()?.trim())
+        .filter { it.isNotBlank() }
+    for (part in rest) {
+        if (out.isNotEmpty()) out.append("  \u00B7  ")
+        out.append(part)
+    }
+    return out
+}
 
 class HomeScrollAdapter(
     val callback: ((View, Int, LoadResponse) -> Unit)
@@ -59,10 +87,12 @@ class HomeScrollAdapter(
         when (binding) {
             is HomeScrollViewBinding -> {
                 binding.homeScrollPreview.loadImage(posterUrl, item.posterHeaders)
-                binding.homeScrollPreviewTags.apply {
-                    text = item.tags?.joinToString(" • ") ?: ""
-                    isGone = item.tags.isNullOrEmpty()
-                    maxLines = 2
+                val meta = heroMeta(binding.root.context, item)
+                binding.homeScrollPreviewMeta.text = meta
+                binding.homeScrollPreviewMeta.isGone = meta.isEmpty()
+                binding.homeScrollPreviewPlot.apply {
+                    text = item.plot?.html() ?: ""
+                    isGone = item.plot.isNullOrBlank()
                 }
                 binding.homeScrollPreviewTitle.text = item.name.html()
 

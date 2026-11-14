@@ -18,8 +18,16 @@
     <dimen name="storage_radius">3dp</dimen>
     <dimen name="navbar_width">0dp</dimen>
 
-    <dimen name="nav_view_height">70dp</dimen>
+    <dimen name="nav_view_height">64dp</dimen>
     <dimen name="nav_rail_view_width">62dp</dimen>
+    <dimen name="nav_pill_margin_horizontal">16dp</dimen>
+    <dimen name="nav_pill_margin_bottom">10dp</dimen>
+
+    <dimen name="hero_height">600dp</dimen>
+    <dimen name="hero_side_padding">20dp</dimen>
+    <!-- play row (56) + gap (20) + page dots (4) + bottom gap (28) -->
+    <dimen name="hero_controls_height">108dp</dimen>
+    <dimen name="hero_button_size">56dp</dimen>
 
     <dimen name="download_size">50dp</dimen>
     <dimen name="video_frame_width">1dp</dimen>

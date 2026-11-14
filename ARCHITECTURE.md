@@ -17,6 +17,10 @@ List every difference from upstream in "Fork changes" below.
   `AccountSelectActivity2` (when the profile picker shows) or `MainActivity`. Android 12+ system splash is set
   in `AppTheme` (`windowSplashScreen*`); older versions use `drawable/splash_background.xml`. Both match the
   intro's first frame.
+- Look: the default dark theme is navy (`values/colors.xml` backgrounds). The phone home hero
+  (`home_scroll_view.xml`, `fragment_home_head.xml`) shows title/logo, rating, year, genre and plot left-aligned with a
+  pill Play button, round watch-status and info buttons, and page dots. The phone bottom nav is a floating pill
+  (`activity_main.xml`, insets applied as margins in `MainActivity`).
 - Releases and the in-app updater point at this fork (PR #2, #4): signed pre-release on push to `master`,
   signed stable `CineVault-X.Y.Z.apk` on tag `vX.Y.Z`, built on the `minipc` self-hosted runner. See CI below.
 - Online accounts are off (`AccountManager.ONLINE_ACCOUNTS_ENABLED = false`): the fork has no MAL, AniList or Simkl
