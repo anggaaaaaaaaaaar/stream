@@ -89,8 +89,12 @@ android {
         // so won't kill the configuration cache.
         if (System.getenv("SIGNING_KEY_ALIAS") != null) {
             create("prerelease") {
-                val tmpFilePath = System.getProperty("user.home") + "/work/_temp/keystore/"
-                val prereleaseStoreFile: File? = File(tmpFilePath).listFiles()?.first()
+                // SIGNING_STORE_FILE lets self-hosted runners point at their own keystore path.
+                // The fallback is the RUNNER_TEMP layout of GitHub-hosted runners.
+                val prereleaseStoreFile: File? = System.getenv("SIGNING_STORE_FILE")
+                    ?.let { File(it) }
+                    ?: File(System.getProperty("user.home") + "/work/_temp/keystore/")
+                        .listFiles()?.firstOrNull()
 
                 storeFile = prereleaseStoreFile?.let { file(it) }
                 storePassword = System.getenv("SIGNING_STORE_PASSWORD")
@@ -353,7 +357,7 @@ dokka {
 
             sourceLink {
                 localDirectory = file("..")
-                remoteUrl("https://github.com/recloudstream/cloudstream/tree/master")
+                remoteUrl("https://github.com/anggaaaaaaaaaaar/stream/tree/master")
                 remoteLineSuffix = "#L"
             }
         }
