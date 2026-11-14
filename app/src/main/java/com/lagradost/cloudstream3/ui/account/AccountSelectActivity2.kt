@@ -12,6 +12,7 @@ import com.lagradost.cloudstream3.CommonActivity
 import com.lagradost.cloudstream3.CommonActivity.loadThemes
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.R
+import com.lagradost.cloudstream3.ui.intro.CineVaultIntro
 import com.lagradost.cloudstream3.ui.settings.Globals.PHONE
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
 import com.lagradost.cloudstream3.utils.BiometricAuthenticator
@@ -159,6 +160,10 @@ class AccountSelectActivity2 : FragmentActivity(), BiometricCallback {
             CloudStreamThemeAppSettings {
                 AccountScreen.Content(state, viewModel::onAction)
             }
+        }
+
+        if (savedInstanceState == null && !isFromMainActivity && !isEditingFromMainActivity) {
+            CineVaultIntro.playOnce(this)
         }
     }
 

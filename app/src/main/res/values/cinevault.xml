@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="cinevault_red">#FF2B3A</color>
+    <!-- The Android 12+ splash draws the 108dp-viewport icon at 288dp; the logo itself takes the
+         inner 66/108 of that, so 176dp keeps the pre-12 splash and the intro the same size. -->
+    <dimen name="cinevault_splash_logo_size">176dp</dimen>
+</resources>

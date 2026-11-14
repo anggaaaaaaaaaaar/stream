@@ -37,7 +37,7 @@ import kotlinx.serialization.Serializable
  */
 @Suppress("Unused")
 class CloudStreamPackage : OpenInAppAction(
-    appName = txt("CloudStream"),
+    appName = txt("CineVault"),
     packageName = BuildConfig.APPLICATION_ID, //"com.cinevault.app" or "com.cinevault.app.prerelease"
     intentClass = "com.lagradost.cloudstream3.ui.player.DownloadedPlayerActivity"
 ) {
