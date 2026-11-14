@@ -1,0 +1,187 @@
+# Architecture
+
+CloudStream is an Android media player that ships with no content. Every source comes from
+extensions (plugins) that the user installs at runtime. The app handles browsing, playback,
+downloads, tracking and sync; plugins only know how to scrape a site and hand back links.
+
+This repo is a fork of [recloudstream/cloudstream](https://github.com/recloudstream/cloudstream).
+As of commit `5d66bbe` the fork's `master` is identical to upstream `master`; there are no fork-specific code changes yet.
+Build scripts, Dokka source links, the in-app updater and CI still point at upstream. If the fork starts to diverge,
+list the differences in a "Fork changes" section here.
+
+Version at the time of writing: `4.9.1` (versionCode 68), from `gradle/libs.versions.toml`.
+
+## Modules
+
+```
+settings.gradle.kts -> :app  :library  :shared  :desktopApp  :docs
+```
+
+| Module | Kind | What it is |
+|---|---|---|
+| `library` | KMP (android, jvm) | The public plugin API. Published as `com.lagradost.api`. Plugins compile against it. ABI is checked in CI. |
+| `app` | Android application | The CloudStream 3 app. XML views + ViewBinding, gradually moving to Compose. Depends on `library` and `shared`. |
+| `shared` | KMP (android, jvm) | Compose Multiplatform UI components, theme, and MVI view models shared between Android and desktop. Called "CloudStream 4". |
+| `desktopApp` | KMP (jvm) | Compose Desktop entry point. Currently a hello-world that renders a few `shared` widgets. |
+| `docs` | JVM | Only aggregates Dokka output from `app` and `library`. |
+
+Dependency direction: `app -> shared, library` and `desktopApp -> shared, library`.
+`library` depends on nothing in this repo. `shared` does not depend on `library`.
+
+## Package map
+
+Package names do not match module names. Use this table to find things.
+
+| Package | Module | Contents |
+|---|---|---|
+| `com.lagradost.cloudstream3` | `library` | `MainAPI`, `APIHolder`, all response/data types (`SearchResponse`, `LoadResponse`, `Episode`, `TvType`, ...) in `MainAPI.kt` |
+| `com.lagradost.cloudstream3.utils` | `library` | `ExtractorApi.kt` (`ExtractorLink`, `loadExtractor`, the built-in `extractorApis` list), `AppUtils` (JSON helpers), `M3u8Helper`, JS unpackers |
+| `com.lagradost.cloudstream3.extractors` | `library` | ~100 built-in `ExtractorApi` implementations, one per video host |
+| `com.lagradost.cloudstream3.metaproviders` | `library` | TMDB, Trakt, MyDramaList base providers that plugins extend |
+| `com.lagradost.cloudstream3.plugins` | `library` | `BasePlugin`, `@CloudstreamPlugin` |
+| `com.lagradost.cloudstream3.mvvm` | `library` | `Resource<T>`, `safeApiCall`, `safe`, `logError` |
+| `com.lagradost.api` | `library` | `Log`, context helper, generated `BuildConfig` (buildkonfig) |
+| `com.lagradost.cloudstream3.*` | `app` | Everything Android: activities, fragments, player, downloader, plugin loading, storage |
+| `com.lagradost.cloudstream4.*` | `shared`, `desktopApp` | Compose components (`compose/`), theme, MVI state (`state/`), shared view models |
+| `com.mihon.*` | `shared` | Settings/preference UI forked file-by-file from Mihon (Apache 2.0, see `shared/src/commonMain/kotlin/com/mihon/LICENSE`) |
+
+Source sets in `library`: `commonMain`, `jvmCommonMain` (shared by `androidMain` and `jvmMain`, holds NewPipe-based code),
+`androidMain`, `jvmMain`. A `webMain` folder exists but no web target is declared in `library/build.gradle.kts`, so it is not compiled.
+
+## The plugin model
+
+This is the core of the app. Read it before touching providers, extractors or the result/player screens.
+
+### Contracts (in `library`)
+
+- `MainAPI` (`library/.../cloudstream3/MainAPI.kt`): one per website. Override:
+  - `getMainPage(page, request)` for the home screen rows declared in `mainPage`
+  - `search(query, page)` / `quickSearch(query)`
+  - `load(url)` returns a `LoadResponse` (movie, series, anime, live, torrent)
+  - `loadLinks(data, isCasting, subtitleCallback, callback)` pushes `ExtractorLink`s and `SubtitleFile`s through callbacks
+- `ExtractorApi` (`utils/ExtractorApi.kt`): one per video host. `getUrl(url, referer, ...)` turns an embed URL into playable `ExtractorLink`s.
+  Providers usually call `loadExtractor(url, referer, subtitleCallback, callback)`, which matches the URL prefix against
+  `extractorApis` (newest registered first, then a mirror-domain pass).
+- `BasePlugin` (`plugins/BasePlugin.kt`): a plugin's entry class. In `load()` it calls `registerMainAPI(...)` and
+  `registerExtractorAPI(...)`, which add to `APIHolder.allProviders` / `APIHolder.apis` and `extractorApis`.
+- Android plugins extend `com.lagradost.cloudstream3.plugins.Plugin` in `app`, which adds `load(context)`, Android
+  `resources`, and `registerVideoClickAction(...)`.
+
+### Loading (in `app`)
+
+`app/.../plugins/PluginManager.kt`:
+
+1. Repositories (`RepositoryManager`) are JSON indexes listing `SitePlugin`s. Users add repo URLs in settings.
+2. Online plugins download to `filesDir/Extensions/<repo>/<name>.cs3` (`ONLINE_PLUGINS_FOLDER`). Local dev plugins live in
+   `<external storage>/Cloudstream3/plugins` (`LOCAL_PLUGINS_PATH`) and can be hot-reloaded.
+3. A `.cs3` file is a dex/APK. `loadPlugin` opens it with `PathClassLoader`, reads `manifest.json`
+   (`BasePlugin.Manifest`: `name`, `version`, `pluginClassName`, `requiresResources`), instantiates the class and calls `load`.
+4. Installed plugin metadata is stored under `PLUGINS_KEY` / `PLUGINS_KEY_LOCAL` in `DataStore`.
+5. Safe mode: `CloudStreamApp`'s uncaught exception handler writes a crash file that names
+   `PluginManager.currentlyLoading`. On the next start `MainActivity.lastError` is set from that file and
+   `isSafeMode()` skips plugin loading. Users can also force it by creating a file named `safe` in `Cloudstream3/`.
+
+Startup calls these from `MainActivity` (around the `checkSafeModeFile()` branch). Functions prefixed
+`___DO_NOT_CALL_FROM_A_PLUGIN_` are app-only entry points; keep that prefix on new ones.
+
+### Calling providers from UI
+
+UI never calls `MainAPI` directly. It goes through `app/.../ui/APIRepository.kt`, which:
+
+- wraps every call in `safeApiCall` and returns `Resource<T>` (`Success`, `Failure`, `Loading`)
+- enforces timeouts (default 120 s, clamped 5 s to 480 s, overridable per provider via `*TimeoutMs`)
+- caches `load` results and handles the "None"/"Random" pseudo-providers
+
+## Main user flows
+
+```
+HomeFragment / SearchFragment
+   -> HomeViewModel / SearchViewModel -> APIRepository.getMainPage / search
+ResultFragment(Phone|Tv)
+   -> ResultViewModel2 -> APIRepository.load -> LoadResponse
+   -> builds RepoLinkGenerator(episodes) and navigates to GeneratorPlayer
+GeneratorPlayer (player UI, ~2.4k lines)
+   -> PlayerGeneratorViewModel -> IGenerator.generateLinks -> APIRepository.loadLinks
+   -> CS3IPlayer (Media3/ExoPlayer wrapper, FFmpeg via nextlib, torrent via torrentserver)
+```
+
+Other `IGenerator`s: `ExtractorLinkGenerator` (raw links), `DownloadFileGenerator` (offline files), `LinkGenerator`.
+
+Navigation is a single XML graph: `app/src/main/res/navigation/mobile_navigation.xml`. Phone and TV share most
+fragments; TV-specific code (`ResultFragmentTv`, alternate layouts) branches on `isLayout(TV)` from `ui/settings/Globals.kt`.
+
+## Subsystems in `app`
+
+| Area | Where | Notes |
+|---|---|---|
+| Storage | `utils/DataStore.kt`, `utils/DataStoreHelper.kt` | SharedPreferences with Jackson-serialized values. Keys are `folder/path`. Per-profile data is prefixed with `DataStoreHelper.currentAccount` (the profile index). Watch state, resume position, bookmarks and subscriptions live here. |
+| Backup | `utils/BackupUtils.kt`, `services/BackupWorkManager.kt` | Exports/imports the preference stores. |
+| Downloads | `utils/downloader/` (`VideoDownloadManager`, `DownloadQueueManager`), `services/VideoDownloadService.kt`, `services/DownloadQueueService.kt` | Queue-based foreground service. HLS and direct files. |
+| Sync and accounts | `syncproviders/` | `AccountManager` holds singletons: MAL, AniList, Kitsu, Simkl, local list; subtitle providers OpenSubtitles, Addic7ed, Subdl, SubSource. `SyncRepo` / `AuthRepo` / `SubtitleRepo` wrap them like `APIRepository` wraps providers. Tokens stored per profile. |
+| Intro/outro skip | `utils/videoskip/` | AniSkip, AnimeSkip, IntroDB, TheIntroDB. |
+| Network | `network/` + `nicehttp` | Global `app` client. `CloudflareKiller`, `DdosGuardKiller` interceptors, DNS-over-HTTPS providers. `library/.../network/WebViewResolver` for sites that need a WebView. |
+| Casting | `utils/CastHelper.kt`, `ui/ControllerActivity.kt`, `actions/temp/fcast/` | Chromecast and FCast. |
+| External players | `actions/`, `actions/temp/` | `VideoClickAction` subclasses (VLC, MPV, Just Player, torrent clients, copy link, ...). Plugins can register more. |
+| App updates | `utils/InAppUpdater.kt`, `ui/settings/ApkUpdater.kt` | GitHub releases. |
+| Android TV | `utils/TvChannelUtils.kt` | TV home channels. |
+| Crash handling | `CloudStreamApp.kt`, `AcraApplication.kt` | Writes crash logs and the currently loading plugin. |
+
+## Compose migration (CloudStream 4)
+
+The rules are in `COMPOSE.md` and `shared/readme.md`. Summary:
+
+- MVI, not MVVM. A view model exposes one immutable state object and takes one sealed action type.
+  Base pieces: `shared/.../cloudstream4/state/Viewmodel.kt` (`StateContainer`, `EffectContainer`, `ActionHandler`,
+  `DefaultStateContainer`). State uses `kotlinx.collections.immutable` (`PersistentList`), `val`, no globals.
+- Shared view models get platform behaviour through interfaces. Example: `ExtensionsViewModel2` takes a
+  `RepositoryManager`; Android passes `AndroidRepositoryManager` (`app/.../ui/settings/extensions/`).
+- `shared` holds components, theme and view models only. Not whole screens, not plugin APIs, not XML layouts.
+  Screens live per platform.
+- Icons are XML drawables in `composeResources`, not `ImageVector` or SVG.
+- No glassmorphism, blur or gradients.
+
+How a migrated screen is wired into the old app: the nav graph points at a thin fragment such as
+`SettingsGeneral2 : BaseComposeFragment(), SearchableSettings by SettingsGeneralScreen`. The `*Screen` object
+holds the Compose UI. The old XML fragment (`SettingsGeneral`) stays in the tree so the change can be rolled back
+by editing the nav graph. Already migrated: settings pages, extensions, subtitle settings, the test screen, and profile select (`AccountSelectActivity2`).
+
+The maintainer does not accept AI-authored groundwork for the Compose rewrite (`shared/readme.md`, "AI Usage").
+
+## Build variants and secrets
+
+- Flavors: `stable` and `prerelease` (`.prerelease` suffix, `-PRE` version, time-based versionCode).
+  Build types: `debug` (`.debug` suffix) and `release`. CI builds `prereleaseDebug`.
+- API keys come from env vars or `local.properties`: `SIMKL_CLIENT_ID`/`simkl.id`, `SIMKL_CLIENT_SECRET`/`simkl.secret`,
+  `MAL_KEY`/`mal.key`, `ANILIST_KEY`/`anilist.key` (app); `MDL_API_KEY`/`mdl.key`, `TRAKT_CLIENT_ID`/`trakt.id` (library).
+  Missing keys build fine; the related feature just fails at runtime.
+- `app:makeJar` merges app and library classes into `classes.jar` for plugin developers who need app-only symbols.
+- Toolchain: JDK 17, `jvmTarget` 11, minSdk 23, targetSdk 36, compileSdk 37. Gradle configuration cache and build cache are on.
+
+## Binary compatibility
+
+Thousands of external plugins are compiled against `library`. Breaking it breaks them silently at runtime.
+
+- `library/api/jvm/library.api` is the checked-in ABI dump. CI runs `./gradlew library:checkKotlinAbi`.
+- New public API must be annotated `@Prerelease` so it is excluded from the dump until it ships in stable.
+- `@InternalAPI` marks things plugins must not use.
+- To remove or rename public API, deprecate first (see the `__filename` -> `filename` and `DataStore.mapper` examples)
+  and keep the old symbol.
+- `app` also carries deprecated deps (`gson`, `fuzzywuzzy`) only because old plugins link against them.
+
+## Tests
+
+| Location | Runner | Covers |
+|---|---|---|
+| `library/src/commonTest`, `jvmTest` | `./gradlew :library:jvmTest` | URL parsing, episode dates, `Resource`/`safeApiCall`, JS interpreter |
+| `app/src/test` | `./gradlew :app:testPrereleaseDebugUnitTest` | AniList parsing, subtitle selection, `APIRepository` observers |
+| `app/src/androidTest` | emulator, `instrumented-tests.yml` | Serialization of every data class, URI serializer |
+
+There are no tests for individual extractors or plugins; they depend on live websites.
+
+## CI
+
+`.github/workflows/`:
+
+- `pull_request.yml`: `library:checkKotlinAbi`, then `assemblePrereleaseDebug lint check`.
+- `prerelease.yml`: signed `assemblePrereleaseRelease androidSourcesJar makeJar` on push to `master` (skips `*.md`-only changes).
+- `instrumented-tests.yml`, `generate_dokka.yml`, `build_to_archive.yml`, `update_locales.yml` (Weblate).
