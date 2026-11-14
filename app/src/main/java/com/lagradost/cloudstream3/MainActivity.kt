@@ -300,7 +300,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                         loadRepository(realUrl)
                         return true
                     } else if (str.contains(APP_STRING)) {
-                        for (api in AccountManager.allApis) {
+                        if (AccountManager.ONLINE_ACCOUNTS_ENABLED) for (api in AccountManager.allApis) {
                             if (api.isValidRedirectUrl(str)) {
                                 ioSafe {
                                     Log.i(TAG, "handleAppIntent $str")

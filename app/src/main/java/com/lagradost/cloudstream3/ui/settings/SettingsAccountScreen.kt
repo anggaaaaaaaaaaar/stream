@@ -14,6 +14,7 @@ import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.aniListApi
 import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.animeSkipApi
 import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.kitsuApi
+import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.ONLINE_ACCOUNTS_ENABLED
 import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.malApi
 import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.openSubtitlesApi
 import com.lagradost.cloudstream3.syncproviders.AccountManager.Companion.simklApi
@@ -96,7 +97,7 @@ object SettingsAccountScreen : SearchableSettings, BiometricAuthenticator.Biomet
         return persistentListOf(
             Preference.PreferenceGroup(
                 title = stringResource(R.string.pref_category_accounts),
-                preferenceItems = syncApis.map { api ->
+                preferenceItems = (if (ONLINE_ACCOUNTS_ENABLED) syncApis else persistentListOf()).map { api ->
                     Preference.PreferenceItem.TextPreference(
                         title = api.name,
                         icon = api.icon?.let { painterResource(it) },

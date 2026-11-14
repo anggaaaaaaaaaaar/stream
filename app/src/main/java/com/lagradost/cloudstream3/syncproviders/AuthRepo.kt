@@ -99,7 +99,8 @@ abstract class AuthRepo(open val api: AuthAPI) {
     }
 
     fun authData(): AuthData? = synchronized(AccountManager.cachedAccountIds) {
-        AccountManager.cachedAccountIds[idPrefix]?.let { id ->
+        if (!AccountManager.ONLINE_ACCOUNTS_ENABLED && api.requiresLogin) null
+        else AccountManager.cachedAccountIds[idPrefix]?.let { id ->
             AccountManager.cachedAccounts[idPrefix]?.firstOrNull { data -> data.user.id == id }
         }
     }

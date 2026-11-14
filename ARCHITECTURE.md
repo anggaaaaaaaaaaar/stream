@@ -19,6 +19,11 @@ List every difference from upstream in "Fork changes" below.
   intro's first frame.
 - Releases and the in-app updater point at this fork (PR #2, #4): signed pre-release on push to `master`,
   signed stable `CineVault-X.Y.Z.apk` on tag `vX.Y.Z`, built on the `minipc` self-hosted runner. See CI below.
+- Online accounts are off (`AccountManager.ONLINE_ACCOUNTS_ENABLED = false`): the fork has no MAL, AniList or Simkl
+  keys. Settings > Account no longer lists MAL, Kitsu, AniList, Simkl, OpenSubtitles, Subdl or AnimeSkip, OAuth
+  redirects are ignored, and `AuthRepo.authData()` returns null for providers that need a login, so the result-page
+  sync panel stays hidden and the library uses only the local list. Bookmarks, watch history and resume positions are
+  local per profile as upstream. Flip the flag to restore login.
 
 Version at the time of writing: `4.9.1` (versionCode 68), from `gradle/libs.versions.toml`.
 
