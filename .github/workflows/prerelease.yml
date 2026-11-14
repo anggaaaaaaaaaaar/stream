@@ -17,16 +17,9 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Set the RELEASE_RUNNER repository variable (e.g. "self-hosted") to build on your own machine.
+    runs-on: ${{ vars.RELEASE_RUNNER || 'ubuntu-latest' }}
     steps:
-    - name: Generate access token
-      id: generate_token
-      uses: tibdex/github-app-token@v2
-      with:
-        app_id: ${{ secrets.GH_APP_ID }}
-        private_key: ${{ secrets.GH_APP_KEY }}
-        repository: "recloudstream/secrets"
-
     - uses: actions/checkout@v6
 
     - name: Set up JDK 17
@@ -38,16 +31,22 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Fetch keystore
+    - name: Write keystore
       id: fetch_keystore
+      env:
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       run: |
-        TMP_KEYSTORE_FILE_PATH="${RUNNER_TEMP}"/keystore
-        mkdir -p "${TMP_KEYSTORE_FILE_PATH}"
-        curl -H "Authorization: token ${{ steps.generate_token.outputs.token }}" -o "${TMP_KEYSTORE_FILE_PATH}/prerelease_keystore.keystore" "https://raw.githubusercontent.com/recloudstream/secrets/master/keystore.jks"
-        curl -H "Authorization: token ${{ steps.generate_token.outputs.token }}" -o "keystore_password.txt" "https://raw.githubusercontent.com/recloudstream/secrets/master/keystore_password.txt"
-        KEY_PWD="$(cat keystore_password.txt)"
-        echo "::add-mask::${KEY_PWD}"
-        echo "key_pwd=$KEY_PWD" >> $GITHUB_OUTPUT
+        if [ -z "${KEYSTORE_BASE64}" ] || [ -z "${KEYSTORE_PASSWORD}" ]; then
+          echo "::error::Set the KEYSTORE_BASE64 and KEYSTORE_PASSWORD repository secrets."
+          exit 1
+        fi
+        KEYSTORE_DIR="${RUNNER_TEMP}/keystore"
+        mkdir -p "${KEYSTORE_DIR}"
+        echo "${KEYSTORE_BASE64}" | base64 -d > "${KEYSTORE_DIR}/prerelease_keystore.keystore"
+        echo "::add-mask::${KEYSTORE_PASSWORD}"
+        echo "key_pwd=${KEYSTORE_PASSWORD}" >> $GITHUB_OUTPUT
+        echo "store_file=${KEYSTORE_DIR}/prerelease_keystore.keystore" >> $GITHUB_OUTPUT
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v5
@@ -57,7 +56,8 @@ jobs:
     - name: Run Gradle
       run: ./gradlew assemblePrereleaseRelease androidSourcesJar makeJar
       env:
-        SIGNING_KEY_ALIAS: "key0"
+        SIGNING_KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS || 'key0' }}
+        SIGNING_STORE_FILE: ${{ steps.fetch_keystore.outputs.store_file }}
         SIGNING_KEY_PASSWORD: ${{ steps.fetch_keystore.outputs.key_pwd }}
         SIGNING_STORE_PASSWORD: ${{ steps.fetch_keystore.outputs.key_pwd }}
         SIMKL_CLIENT_ID: ${{ secrets.SIMKL_CLIENT_ID }}
@@ -66,6 +66,10 @@ jobs:
         MDL_API_KEY: ${{ secrets.MDL_API_KEY }}
         MAL_KEY: ${{ secrets.MAL_KEY }}
         ANILIST_KEY: ${{ secrets.ANILIST_KEY }}
+
+    - name: Remove keystore
+      if: always()
+      run: rm -rf "${RUNNER_TEMP}/keystore"
 
     - name: Create pre-release
       uses: marvinpinto/action-automatic-releases@latest

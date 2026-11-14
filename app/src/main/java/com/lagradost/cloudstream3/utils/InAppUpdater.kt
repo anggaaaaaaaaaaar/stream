@@ -21,6 +21,7 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mvvm.logError
 import com.lagradost.cloudstream3.mvvm.safe
 import com.lagradost.cloudstream3.services.PackageInstallerService
+import com.lagradost.cloudstream3.ui.settings.GithubReleases
 import com.lagradost.cloudstream3.utils.AppContextUtils.setDefaultFocus
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.Coroutines.ioSafe
@@ -38,8 +39,8 @@ import java.io.IOException
 import java.io.InputStreamReader
 
 object InAppUpdater {
-    private const val GITHUB_USER_NAME = "recloudstream"
-    private const val GITHUB_REPO = "cloudstream"
+    private const val GITHUB_USER_NAME = GithubReleases.APK_USERNAME
+    private const val GITHUB_REPO = GithubReleases.APK_REPOSITORY
 
     private const val PRERELEASE_PACKAGE_NAME = "com.lagradost.cloudstream3.prerelease"
     private const val LOG_TAG = "InAppUpdater"
@@ -152,7 +153,7 @@ object InAppUpdater {
 
     private suspend fun Activity.getPreReleaseUpdate(): Update {
         val tagUrl =
-            "https://api.github.com/repos/$GITHUB_USER_NAME/$GITHUB_REPO/git/ref/tags/pre-release"
+            "https://api.github.com/repos/$GITHUB_USER_NAME/$GITHUB_REPO/git/ref/tags/${GithubReleases.APK_PRERELEASE}"
         val releaseUrl = "https://api.github.com/repos/$GITHUB_USER_NAME/$GITHUB_REPO/releases"
         val headers = mapOf("Accept" to "application/vnd.github.v3+json")
         val response = parseJson<Array<GithubRelease>>(
@@ -160,7 +161,7 @@ object InAppUpdater {
         ).toList()
 
         val found = response.lastOrNull { rel ->
-            rel.prerelease || rel.tagName == "pre-release"
+            rel.prerelease || rel.tagName == GithubReleases.APK_PRERELEASE
         }
 
         val foundAsset = found?.assets?.filter { it ->
