@@ -4,8 +4,10 @@ CloudStream is an Android media player that ships with no content. Every source 
 extensions (plugins) that the user installs at runtime. The app handles browsing, playback,
 downloads, tracking and sync; plugins only know how to scrape a site and hand back links.
 
-This repo is a copy of [recloudstream/cloudstream](https://github.com/recloudstream/cloudstream).
-Build scripts, Dokka source links and CI still point at upstream.
+This repo is a fork of [recloudstream/cloudstream](https://github.com/recloudstream/cloudstream).
+As of commit `5d66bbe` the fork's `master` is identical to upstream `master`; there are no fork-specific code changes yet.
+Build scripts, Dokka source links, the in-app updater and CI still point at upstream. If the fork starts to diverge,
+list the differences in a "Fork changes" section here.
 
 Version at the time of writing: `4.9.1` (versionCode 68), from `gradle/libs.versions.toml`.
 
