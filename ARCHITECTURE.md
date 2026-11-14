@@ -172,6 +172,7 @@ The maintainer does not accept AI-authored groundwork for the Compose rewrite (`
   `MAL_KEY`/`mal.key`, `ANILIST_KEY`/`anilist.key` (app); `MDL_API_KEY`/`mdl.key`, `TRAKT_CLIENT_ID`/`trakt.id` (library).
   Missing keys build fine; the related feature just fails at runtime.
 - `app:makeJar` merges app and library classes into `classes.jar` for plugin developers who need app-only symbols.
+  It depends on the full `build`, so this fork's release workflows do not run it (it ran the `minipc` runner out of memory).
 - Toolchain: JDK 17, `jvmTarget` 11, minSdk 23, targetSdk 36, compileSdk 37. Gradle configuration cache and build cache are on.
 
 ## Binary compatibility
