@@ -44,7 +44,7 @@ object GithubReleases : GithubRepository {
 
     // Releases and in-app updates come from this fork, not upstream.
     const val APK_USERNAME = "anggaaaaaaaaaaar"
-    const val APK_REPOSITORY = "stream"
+    const val APK_REPOSITORY = "stream-base"
     const val APK_PRERELEASE = "pre-release"
     const val APK_CONTENT_TYPE = "application/vnd.android.package-archive"
 

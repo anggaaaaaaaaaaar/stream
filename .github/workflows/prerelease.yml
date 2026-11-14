@@ -1,5 +1,9 @@
 name: Pre-release
 
+# This workflow may run on a self-hosted runner (see RELEASE_RUNNER below).
+# Keep it limited to pushes on master of this repository: never add
+# pull_request, pull_request_target, issue_comment or workflow_run triggers,
+# because those would run untrusted code on that machine.
 on:
   push:
     branches: [ master ]
@@ -12,18 +16,24 @@ concurrency:
   group: "pre-release"
   cancel-in-progress: true
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   build:
-    # Set the RELEASE_RUNNER repository variable (e.g. "self-hosted") to build on your own machine.
+    if: github.repository == 'anggaaaaaaaaaaar/stream-base' && github.ref == 'refs/heads/master'
+    # Set the RELEASE_RUNNER repository variable to your runner's label (e.g. "minipc")
+    # to build on your own machine. Defaults to a GitHub-hosted runner.
     runs-on: ${{ vars.RELEASE_RUNNER || 'ubuntu-latest' }}
+    permissions:
+      contents: write
+    timeout-minutes: 90
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      with:
+        persist-credentials: false
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
       with:
         distribution: temurin
         java-version: 17
@@ -43,13 +53,12 @@ jobs:
         fi
         KEYSTORE_DIR="${RUNNER_TEMP}/keystore"
         mkdir -p "${KEYSTORE_DIR}"
+        chmod 700 "${KEYSTORE_DIR}"
         echo "${KEYSTORE_BASE64}" | base64 -d > "${KEYSTORE_DIR}/prerelease_keystore.keystore"
-        echo "::add-mask::${KEYSTORE_PASSWORD}"
-        echo "key_pwd=${KEYSTORE_PASSWORD}" >> $GITHUB_OUTPUT
-        echo "store_file=${KEYSTORE_DIR}/prerelease_keystore.keystore" >> $GITHUB_OUTPUT
+        echo "store_file=${KEYSTORE_DIR}/prerelease_keystore.keystore" >> "$GITHUB_OUTPUT"
 
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v5
+      uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with:
         cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
@@ -58,8 +67,8 @@ jobs:
       env:
         SIGNING_KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS || 'key0' }}
         SIGNING_STORE_FILE: ${{ steps.fetch_keystore.outputs.store_file }}
-        SIGNING_KEY_PASSWORD: ${{ steps.fetch_keystore.outputs.key_pwd }}
-        SIGNING_STORE_PASSWORD: ${{ steps.fetch_keystore.outputs.key_pwd }}
+        SIGNING_KEY_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        SIGNING_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         SIMKL_CLIENT_ID: ${{ secrets.SIMKL_CLIENT_ID }}
         SIMKL_CLIENT_SECRET: ${{ secrets.SIMKL_CLIENT_SECRET }}
         TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
@@ -71,14 +80,19 @@ jobs:
       if: always()
       run: rm -rf "${RUNNER_TEMP}/keystore"
 
-    - name: Create pre-release
-      uses: marvinpinto/action-automatic-releases@latest
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "pre-release"
-        prerelease: true
-        title: "Pre-release Build"
-        files: |
-          app/build/outputs/apk/prerelease/release/*.apk
-          app/build/libs/app-sources.jar
+    # Uses the gh CLI instead of a third-party action, so no outside code
+    # touches the release token. A self-hosted runner needs gh installed.
+    - name: Publish pre-release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+      run: |
+        gh release delete pre-release --cleanup-tag --yes || true
+        gh release create pre-release \
+          --prerelease \
+          --target "${GITHUB_SHA}" \
+          --title "Pre-release Build" \
+          --notes "Built from ${GITHUB_SHA}" \
+          app/build/outputs/apk/prerelease/release/*.apk \
+          app/build/libs/app-sources.jar \
           app/build/classes.jar

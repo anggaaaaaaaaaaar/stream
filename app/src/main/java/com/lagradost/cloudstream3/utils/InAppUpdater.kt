@@ -42,7 +42,7 @@ object InAppUpdater {
     private const val GITHUB_USER_NAME = GithubReleases.APK_USERNAME
     private const val GITHUB_REPO = GithubReleases.APK_REPOSITORY
 
-    private const val PRERELEASE_PACKAGE_NAME = "com.lagradost.cloudstream3.prerelease"
+    private const val PRERELEASE_PACKAGE_NAME = "com.cinevault.app.prerelease"
     private const val LOG_TAG = "InAppUpdater"
 
     @Serializable

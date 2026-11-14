@@ -143,7 +143,7 @@ dokka {
 
             sourceLink {
                 localDirectory = file("..")
-                remoteUrl("https://github.com/anggaaaaaaaaaaar/stream/tree/master")
+                remoteUrl("https://github.com/anggaaaaaaaaaaar/stream-base/tree/master")
                 remoteLineSuffix = "#L"
             }
         }

@@ -469,7 +469,7 @@ class ExtensionsViewModel2(
         info = RepositoryInfo(
             iconUrl = null,
             name = "Local plugins",
-            url = "https://github.com/anggaaaaaaaaaaar/stream",
+            url = "https://github.com/anggaaaaaaaaaaar/stream-base",
             description = "Locally installed plugins"
         ),
         status = RepositoryStatus.Success,
