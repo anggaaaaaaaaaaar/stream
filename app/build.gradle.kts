@@ -88,7 +88,7 @@ android {
         // We just use SIGNING_KEY_ALIAS here since it won't change
         // so won't kill the configuration cache.
         if (System.getenv("SIGNING_KEY_ALIAS") != null) {
-            create("prerelease") {
+            create("release") {
                 // SIGNING_STORE_FILE lets self-hosted runners point at their own keystore path.
                 // The fallback is the RUNNER_TEMP layout of GitHub-hosted runners.
                 val prereleaseStoreFile: File? = System.getenv("SIGNING_STORE_FILE")
@@ -107,7 +107,9 @@ android {
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.lagradost.cloudstream3"
+        // Own package so this build installs next to upstream Cloudstream.
+        // The Kotlin namespace below stays com.lagradost.cloudstream3.
+        applicationId = "com.cinevault.app"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = libs.versions.versionCode.get().toInt()
@@ -170,14 +172,17 @@ android {
     productFlavors {
         create("stable") {
             dimension = "state"
+            if (signingConfigs.names.contains("release")) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         create("prerelease") {
             dimension = "state"
             applicationIdSuffix = ".prerelease"
-            if (signingConfigs.names.contains("prerelease")) {
-                signingConfig = signingConfigs.getByName("prerelease")
+            if (signingConfigs.names.contains("release")) {
+                signingConfig = signingConfigs.getByName("release")
             } else {
-                logger.warn("No prerelease signing config!")
+                logger.warn("No release signing config!")
             }
             versionNameSuffix = "-PRE"
             versionCode = (System.currentTimeMillis() / 60000).toInt()
