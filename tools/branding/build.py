@@ -1,117 +1,153 @@
-"""Generates CineVault icon resources (vector XML + PNG previews) from one geometry source."""
-import os, subprocess, sys
-from logo import ring_paths, c_letter, V_PATH, TRI, GLOW_C, WHITE, RED, BG, f
+"""Generate every CineVault icon resource from cinevault-logo.jpg.
+
+    python3 build.py ../../app/src/main
+
+Writes PNGs into res/ (logo, monochrome, notification, legacy launcher, TV banner), the
+play store icon, and the wordmark vector. The XML wrappers (ic_launcher_foreground.xml,
+ic_cloudstream_monochrome.xml, splash_background.xml) are hand-written and only reference these.
+"""
+import os
+import sys
+
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+from extract import color_to_alpha
 from wordmark import wordmark
 
-RES = sys.argv[1]
-OUT = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.abspath(__file__))
+SOURCE = os.path.join(HERE, "cinevault-logo.jpg")
+FONT = "/usr/share/fonts/opentype/inter/Inter-Bold.otf"
 
-def circle(cx, cy, r):
-    return f"M{f(cx-r)},{f(cy)}a{f(r)},{f(r)} 0,1 0 {f(2*r)},0a{f(r)},{f(r)} 0,1 0 {f(-2*r)},0Z"
+GREEN = (7, 66, 34)  # background of the source image, also ic_launcher_background
+MINT = (206, 239, 222)
+DENSITIES = {"mdpi": 1, "hdpi": 1.5, "xhdpi": 2, "xxhdpi": 3, "xxxhdpi": 4}
 
-GLOW_R = 14.0
-GLOW_STOPS = [(0, "#FF2B3A", 0.80), (0.4, "#FF2B3A", 0.30), (1, "#FF2B3A", 0.0)]
-TRI_STOPS = [(0, "#FF7A84", 1), (1, "#FF2B3A", 1)]
 
-def elements(glow=True, mono=None):
-    w = mono or WHITE; r = mono or RED
-    bands, hinges = ring_paths()
-    els = []
-    if glow and not mono:
-        els.append(dict(name="glow", d=circle(*GLOW_C, GLOW_R), grad=("radial", GLOW_C, GLOW_R, GLOW_STOPS)))
-    for i, b in enumerate(bands + hinges):
-        els.append(dict(name=f"ring{i}", d=b, fill=w))
-    els.append(dict(name="letter_c", d=c_letter(), stroke=w, sw=3.5))
-    els.append(dict(name="letter_v", d=V_PATH, fill=w))
-    if glow and not mono:
-        els.append(dict(name="play", d=TRI, grad=("radial", (62.6, 54.0), 9.0, TRI_STOPS)))
+def emblem():
+    """Transparent, square-cropped emblem (ring, CV, film strip, play button)."""
+    rgba = color_to_alpha(np.asarray(Image.open(SOURCE).convert("RGB")))
+    # Drop stray JPEG noise outside the emblem: keep an ellipse around the solid pixels.
+    ys, xs = np.nonzero(rgba[..., 3] > 128)
+    cx, cy = (xs.min() + xs.max()) / 2, (ys.min() + ys.max()) / 2
+    rx, ry = (xs.max() - xs.min()) / 2 + 14, (ys.max() - ys.min()) / 2 + 14
+    yy, xx = np.mgrid[: rgba.shape[0], : rgba.shape[1]]
+    rgba[((xx - cx) / rx) ** 2 + ((yy - cy) / ry) ** 2 > 1, 3] = 0
+    l, t, r, b = Image.fromarray((rgba[..., 3] > 0).astype(np.uint8) * 255).getbbox()
+    side = max(r - l, b - t)
+    cx, cy = (l + r) / 2, (t + b) / 2
+    box = tuple(int(v) for v in (cx - side / 2, cy - side / 2, cx + side / 2, cy + side / 2))
+    return Image.fromarray(rgba, "RGBA").crop(box)
+
+
+def monochrome(logo):
+    """White silhouette for themed icons and the notification icon; the play triangle is cut out."""
+    a = np.asarray(logo).astype(float)
+    # Hard-ish edge: themed icons and the status bar need a clean shape, not JPEG haze.
+    alpha = np.clip((a[..., 3] / 255 - 0.25) / 0.25, 0, 1)
+    # After colour-to-alpha the triangle is ~(254, 31, 62) and the button around it ~(224, 0, 48).
+    tri = (a[..., 0] > 242) & (a[..., 1] < 110) & (a[..., 3] > 200)
+    tri_img = Image.fromarray(tri.astype(np.uint8) * 255)
+    # close the speckles inside the triangle, then grow it a little so the cut-out reads at 24dp
+    tri_img = tri_img.filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(9))
+    tri_img = tri_img.filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.GaussianBlur(1.5))
+    alpha = alpha * (1 - np.asarray(tri_img) / 255)
+    alpha_img = Image.fromarray((alpha * 255).astype(np.uint8)).filter(ImageFilter.MedianFilter(5))
+    out = Image.new("RGBA", logo.size, (255, 255, 255, 0))
+    out.putalpha(alpha_img)
+    return out
+
+
+def fit(img, size):
+    return img.resize((size, size), Image.LANCZOS)
+
+
+def tile(logo, px, shape):
+    """Pre-O launcher icon: green tile (rounded square or circle) with the emblem at 84%."""
+    s = px * 8
+    mask = Image.new("L", (s, s), 0)
+    d = ImageDraw.Draw(mask)
+    if shape == "circle":
+        d.ellipse((0, 0, s - 1, s - 1), fill=255)
     else:
-        els.append(dict(name="play", d=TRI, fill=r))
-    return els
+        d.rounded_rectangle((0, 0, s - 1, s - 1), radius=s * 0.2, fill=255)
+    base = Image.new("RGBA", (s, s), GREEN + (255,))
+    inner = round(s * 0.84)
+    off = (s - inner) // 2
+    base.alpha_composite(fit(logo, inner), (off, off))
+    base.putalpha(mask)
+    return base.resize((px, px), Image.LANCZOS)
 
-def hexa(color, a):
-    return "#%02X%s" % (round(a * 255), color[1:])
 
-# ---------- Android vector writer ----------
-def av_path(e, ind):
-    p = ind
-    attrs = [f'android:name="{e["name"]}"', f'android:pathData="{e["d"]}"']
-    if "fill" in e: attrs.append(f'android:fillColor="{e["fill"]}"')
-    if "stroke" in e:
-        attrs += [f'android:strokeColor="{e["stroke"]}"', f'android:strokeWidth="{e["sw"]}"']
-    if "grad" not in e:
-        return f"{p}<path\n" + "".join(f"{p}    {a}\n" for a in attrs[:-1]) + f"{p}    {attrs[-1]} />\n"
-    kind, (cx, cy), rad, stops = e["grad"]
-    s = f"{p}<path\n" + "".join(f"{p}    {a}\n" for a in attrs[:-1]) + f"{p}    {attrs[-1]}>\n"
-    s += f'{p}    <aapt:attr name="android:fillColor">\n'
-    s += f'{p}        <gradient\n{p}            android:type="radial"\n{p}            android:centerX="{f(cx)}"\n{p}            android:centerY="{f(cy)}"\n{p}            android:gradientRadius="{f(rad)}">\n'
-    for o, c, a in stops:
-        s += f'{p}            <item android:offset="{o}" android:color="{hexa(c, a)}" />\n'
-    s += f"{p}        </gradient>\n{p}    </aapt:attr>\n{p}</path>\n"
-    return s
+def banner(logo, w, h):
+    s = 4
+    img = Image.new("RGBA", (w * s, h * s), GREEN + (255,))
+    logo_px = round(h * s * 0.62)
+    font = ImageFont.truetype(FONT, round(h * s * 0.2))
+    text = "CineVault"
+    tw = font.getlength(text)
+    gap = h * s * 0.08
+    x = (w * s - (logo_px + gap + tw)) / 2
+    img.alpha_composite(fit(logo, logo_px), (round(x), (h * s - logo_px) // 2))
+    d = ImageDraw.Draw(img)
+    d.text((x + logo_px + gap, h * s / 2), text, font=font, fill=MINT, anchor="lm")
+    return img.resize((w, h), Image.LANCZOS)
 
-def vector(w, h, vw, vh, body, aapt=False, comment=None):
-    head = '<?xml version="1.0" encoding="utf-8"?>\n'
-    if comment: head += f"<!-- {comment} -->\n"
-    ns = 'xmlns:android="http://schemas.android.com/apk/res/android"'
-    if aapt: ns += '\n    xmlns:aapt="http://schemas.android.com/aapt"'
-    return (head + f'<vector {ns}\n    android:width="{w}dp"\n    android:height="{h}dp"\n'
-            f'    android:viewportWidth="{f(vw)}"\n    android:viewportHeight="{f(vh)}">\n' + body + "</vector>\n")
 
-def group(name, body, sx=1, tx=0, ty=0, px=None, py=None):
-    a = [f'android:name="{name}"']
-    if px is not None: a += [f'android:pivotX="{f(px)}"', f'android:pivotY="{f(py)}"']
-    if sx != 1: a += [f'android:scaleX="{f(sx)}"', f'android:scaleY="{f(sx)}"']
-    if tx: a.append(f'android:translateX="{f(tx)}"')
-    if ty: a.append(f'android:translateY="{f(ty)}"')
-    ind = "    "
-    return f"{ind}<group\n" + "".join(f"{ind}    {x}\n" for x in a[:-1]) + f"{ind}    {a[-1]}>\n" + \
-        "".join("    " + l + "\n" for l in body.rstrip("\n").split("\n")) + f"{ind}</group>\n"
+def wordmark_xml():
+    d, w = wordmark()
+    vw, vh = w + 0.04, 1.25
+    color = "#%02X%02X%02X" % MINT
+    return f"""<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated by tools/branding/build.py. Text outlines from Inter Bold (OFL). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="{round(40 * vw / vh)}dp"
+    android:height="40dp"
+    android:viewportWidth="{vw:.2f}"
+    android:viewportHeight="{vh}">
+    <group
+        android:name="wordmark"
+        android:translateX="0.02"
+        android:translateY="0.12">
+        <path
+            android:name="wordmark_text"
+            android:fillColor="{color}"
+            android:pathData="{d}" />
+    </group>
+</vector>
+"""
 
-def logo_body(glow=True, mono=None, ind="    "):
-    return "".join(av_path(e, ind) for e in elements(glow, mono))
 
-GEN = "Generated from the CineVault logo. Keep in sync with the other ic_cinevault_* drawables."
+def save(img, path):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.save(path, optimize=True)
+    print("wrote", os.path.relpath(path))
 
-def write(rel, text):
-    path = os.path.join(RES, rel); os.makedirs(os.path.dirname(path), exist_ok=True)
-    open(path, "w").write(text); print("wrote", rel)
 
-WM_D, WM_W = wordmark()
+def main(main_dir):
+    res = os.path.join(main_dir, "res")
+    logo = emblem()
+    mono = monochrome(logo)
+    save(fit(logo, 720), f"{res}/drawable-nodpi/ic_cinevault_logo.png")
+    save(fit(mono, 432), f"{res}/drawable-nodpi/ic_cinevault_logo_mono.png")
+    for name, k in DENSITIES.items():
+        # notification icon: 24dp with 1dp padding
+        px = round(24 * k)
+        n = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+        inner = round(22 * k)
+        n.alpha_composite(fit(mono, inner), ((px - inner) // 2, (px - inner) // 2))
+        save(n, f"{res}/drawable-{name}/ic_cloudstream_monochrome_big.png")
+        save(tile(logo, round(48 * k), "square"), f"{res}/mipmap-{name}/ic_launcher.png")
+        save(tile(logo, round(48 * k), "circle"), f"{res}/mipmap-{name}/ic_launcher_round.png")
+    save(banner(logo, 320, 180), f"{res}/mipmap-xhdpi/ic_banner.png")
+    save(banner(logo, 640, 360), f"{res}/mipmap-xxxhdpi/ic_banner.png")
+    store = Image.new("RGBA", (512, 512), GREEN + (255,))
+    store.alpha_composite(fit(logo, 430), (41, 41))
+    save(store, f"{main_dir}/ic_launcher-playstore.png")
+    with open(f"{res}/drawable/ic_cinevault_wordmark.xml", "w") as f:
+        f.write(wordmark_xml())
+    print("wrote drawable/ic_cinevault_wordmark.xml")
 
-def wordmark_paths(scale, tx, ty, color=WHITE, ind="    "):
-    return group("wordmark", f'{ind}<path\n{ind}    android:name="wordmark_text"\n{ind}    android:fillColor="{color}"\n{ind}    android:pathData="{WM_D}" />\n', sx=scale, tx=tx, ty=ty)
-
-def main():
-    # adaptive icon foreground (108dp, content within the 66dp safe zone)
-    write("drawable-v24/ic_launcher_foreground.xml", vector(108, 108, 108, 108, logo_body(True), aapt=True, comment=GEN))
-    write("drawable/ic_launcher_foreground.xml", vector(108, 108, 108, 108, logo_body(False), comment=GEN))
-    # themed-icon monochrome layer and the notification small icon
-    write("drawable/ic_cloudstream_monochrome.xml", vector(108, 108, 108, 108, logo_body(False, "#FFFFFFFF"), comment=GEN))
-    write("drawable/ic_cloudstream_monochrome_big.xml",
-          vector(24, 24, 66, 66, group("logo", logo_body(False, "#FFFFFFFF"), tx=-21, ty=-21), comment=GEN))
-    # logo without padding, used by the in-app intro and the setup screen
-    write("drawable-v24/ic_cinevault_logo.xml",
-          vector(200, 200, 66, 66, group("logo", logo_body(True), tx=-21, ty=-21), aapt=True, comment=GEN))
-    write("drawable/ic_cinevault_logo.xml",
-          vector(200, 200, 66, 66, group("logo", logo_body(False), tx=-21, ty=-21), comment=GEN))
-    # wordmark (Inter Bold outlines), cap height 1 unit
-    wm_h = 1.25  # room for descender-free text plus small margin
-    write("drawable/ic_cinevault_wordmark.xml",
-          vector(round(40 * (WM_W + 0.04) / wm_h), 40, WM_W + 0.04, wm_h,
-                 wordmark_paths(1, 0.02, 0.12), comment=GEN + " Text outlines from Inter Bold (OFL)."))
-    # TV banner 320x180: logo left, wordmark right
-    s_logo = 1.5  # 66 -> 99
-    wm_cap = 26
-    total = 66 * s_logo + 14 + WM_W * wm_cap
-    lx, ly = (320 - total) / 2, (180 - 66 * s_logo) / 2
-    wm_x = lx + 66 * s_logo + 14
-    body = f'    <path\n        android:name="background"\n        android:fillColor="{BG}"\n        android:pathData="M0,0h320v180h-320z" />\n'
-    body += group("logo", logo_body(True, ind="        ").replace("\n        ", "\n        "), sx=s_logo,
-                  tx=lx - 21 * s_logo, ty=ly - 21 * s_logo)
-    body += wordmark_paths(wm_cap, wm_x, (180 - wm_cap) / 2)
-    write("drawable-v24/ic_banner_background.xml", vector(320, 180, 320, 180, body, aapt=True, comment=GEN))
-    return wm_x, wm_cap
 
 if __name__ == "__main__":
-    print(main())
+    main(sys.argv[1])
