@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
@@ -58,9 +59,11 @@ import com.lagradost.cloudstream3.utils.SingleSelectionHelper.showBottomDialog
 import com.lagradost.cloudstream3.utils.SingleSelectionHelper.showOptionSelectStringRes
 import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarMargin
 import com.lagradost.cloudstream3.utils.UIHelper.fixPaddingStatusbarView
+import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.utils.UIHelper.populateChips
-import androidx.core.graphics.toColorInt
 import com.lagradost.cloudstream3.ui.setRecycledViewPool
+
+private const val MAX_DOTS = 6
 
 class HomeParentItemAdapterPreview(
     private val viewModel: HomeViewModel,
@@ -348,19 +351,7 @@ class HomeParentItemAdapterPreview(
                 val scoreText = item.score?.toStringNull(0.1, 10, 1, false)
 
                 scoreText?.let { score ->
-                    homePreviewScore.text =
-                        homePreviewScore.context.getString(R.string.extension_rating, score)
-
-                    // while it should never fail, we do this just in case
-                    val rating = score.toDoubleOrNull() ?: item.score?.toDouble() ?: 0.0
-
-                    val color = when {
-                        rating < 5.0 -> "#eb2f2f".toColorInt() // Red
-                        rating < 8.0 -> "#eda009".toColorInt() // Yellow
-                        else -> "#3bb33b".toColorInt() // Green
-                    }
-                    homePreviewScore.backgroundTintList =
-                        android.content.res.ColorStateList.valueOf(color)
+                    homePreviewScore.text = "\u2605 $score"
                 }
                 homePreviewScore.isGone = scoreText == null
 
@@ -430,20 +421,15 @@ class HomeParentItemAdapterPreview(
                     )
                 }
 
-                // very ugly code, but I don't care
+                updateDots(homePreviewDots, previewAdapter.itemCount, position)
+
                 val id = item.getId()
-                val watchType =
-                    DataStoreHelper.getResultWatchState(id)
-                homePreviewBookmark.setText(watchType.stringRes)
-                homePreviewBookmark.setCompoundDrawablesWithIntrinsicBounds(
-                    null,
-                    ContextCompat.getDrawable(
-                        homePreviewBookmark.context,
-                        watchType.iconRes
-                    ),
-                    null,
-                    null
-                )
+                fun showWatchType(watchType: WatchType) {
+                    homePreviewBookmark.setIconResource(watchType.iconRes)
+                    homePreviewBookmark.contentDescription =
+                        homePreviewBookmark.context.getString(watchType.stringRes)
+                }
+                showWatchType(DataStoreHelper.getResultWatchState(id))
 
                 homePreviewBookmark.setOnClickListener { fab ->
                     fab.context.getActivity()?.showBottomDialog(
@@ -462,19 +448,36 @@ class HomeParentItemAdapterPreview(
                             item
                         ) { statusChanged: Boolean ->
                             if (!statusChanged) return@updateWatchStatus
-
-                            homePreviewBookmark.setCompoundDrawablesWithIntrinsicBounds(
-                                null,
-                                ContextCompat.getDrawable(
-                                    homePreviewBookmark.context,
-                                    newValue.iconRes
-                                ),
-                                null,
-                                null
-                            )
-                            homePreviewBookmark.setText(newValue.stringRes)
+                            showWatchType(newValue)
                         }
                     }
+                }
+            }
+        }
+
+        /** Page indicator under the hero: a sliding window of at most [MAX_DOTS] bars. */
+        private fun updateDots(holder: LinearLayout, count: Int, selected: Int) {
+            val shown = minOf(count, MAX_DOTS)
+            holder.isVisible = shown > 1
+            if (shown <= 1) return
+            val first = (selected - shown / 2).coerceIn(0, count - shown)
+            val density = holder.resources.displayMetrics.density
+            while (holder.childCount < shown) {
+                holder.addView(View(holder.context).apply {
+                    setBackgroundResource(R.drawable.hero_page_dot)
+                })
+            }
+            for (i in 0 until holder.childCount) {
+                val dot = holder.getChildAt(i)
+                dot.isVisible = i < shown
+                if (i >= shown) continue
+                val active = first + i == selected
+                dot.alpha = if (active) 1f else 0.3f
+                dot.layoutParams = LinearLayout.LayoutParams(
+                    ((if (active) 28 else 12) * density).toInt(),
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                ).apply {
+                    marginStart = if (i == 0) 0 else (6 * density).toInt()
                 }
             }
         }
@@ -640,6 +643,9 @@ class HomeParentItemAdapterPreview(
             }
 
             (binding as? FragmentHomeHeadBinding)?.apply {
+                homeHeadDownloads.setOnClickListener {
+                    activity.navigate(R.id.navigation_downloads)
+                }
                 homeSearch.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                     override fun onQueryTextSubmit(query: String): Boolean {
                         viewModel.queryTextSubmit(query)

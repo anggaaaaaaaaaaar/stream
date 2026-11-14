@@ -720,6 +720,97 @@
         <item name="android:textColor">?attr/iconGrayBackground</item>
         <item name="rippleColor">?attr/primaryBlackBackground</item>
     </style>
+    <!-- Phone home hero: big pill play button and the round icon buttons next to it -->
+    <style name="HeroPlayButton" parent="WhiteButton">
+        <item name="android:layout_height">@dimen/hero_button_size</item>
+        <item name="android:layout_marginStart">0dp</item>
+        <item name="android:layout_marginEnd">0dp</item>
+        <item name="cornerRadius">28dp</item>
+        <item name="iconSize">24dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.04</item>
+        <item name="android:foreground">@null</item>
+    </style>
+
+    <style name="HeroCircleButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:layout_width">@dimen/hero_button_size</item>
+        <item name="android:layout_height">@dimen/hero_button_size</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:layout_marginStart">12dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="cornerRadius">28dp</item>
+        <item name="iconSize">26dp</item>
+        <item name="iconPadding">0dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconTint">?attr/white</item>
+        <item name="strokeColor">@color/heroCircleStroke</item>
+        <item name="strokeWidth">1.5dp</item>
+        <item name="backgroundTint">#33000000</item>
+        <item name="rippleColor">@color/navIndicator</item>
+    </style>
+
+    <!-- Browse screen: segmented category pills and dropdown filter chips -->
+    <style name="BrowseTab">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/browse_tab_text</item>
+        <item name="android:background">@drawable/browse_tab_selected</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="BrowseFilterChip" parent="Widget.Material3.Chip.Assist">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginEnd">10dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">?attr/textColor</item>
+        <item name="chipMinHeight">44dp</item>
+        <item name="chipMinTouchTargetSize">0dp</item>
+        <item name="chipCornerRadius">22dp</item>
+        <item name="chipBackgroundColor">@color/navPillBackground</item>
+        <item name="chipStrokeColor">@color/navPillStroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipStartPadding">14dp</item>
+        <item name="chipEndPadding">10dp</item>
+        <item name="closeIcon">@drawable/ic_baseline_keyboard_arrow_down_24</item>
+        <item name="closeIconVisible">true</item>
+        <item name="closeIconTint">?attr/textColor</item>
+        <item name="closeIconSize">20dp</item>
+        <item name="rippleColor">@color/navIndicator</item>
+        <item name="android:tag">@string/tv_no_focus_tag</item>
+    </style>
+
+    <style name="NavPillIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:width">60dp</item>
+        <item name="android:height">48dp</item>
+        <item name="shapeAppearance">@style/NavPillIndicatorShape</item>
+    </style>
+
+    <style name="NavRailIndicator" parent="Widget.Material3.NavigationRailView.ActiveIndicator">
+        <item name="android:width">48dp</item>
+        <item name="android:height">44dp</item>
+        <item name="shapeAppearance">@style/NavPillIndicatorShape</item>
+    </style>
+
+    <style name="NavPillIndicatorShape">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
     <!-- This is so shit, because android has no native way to either changing the layout (android:layout) or changing the layout_height for no reason.
     So the only way to shrink the buttons is by using insetTop+insetBottom along with the drawable.
     https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/layout/alert_dialog.xml <- old xml for reference, but new use m3_alert_dialog

@@ -9,6 +9,7 @@ import android.content.SharedPreferences
 import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
 import android.util.Log
@@ -31,12 +32,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.children
 import androidx.core.view.get
 import androidx.core.view.isGone
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.marginStart
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
@@ -504,6 +508,7 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         val isNavVisible = listOf(
             R.id.navigation_home,
+            R.id.navigation_browse,
             R.id.navigation_search,
             R.id.navigation_library,
             R.id.navigation_downloads,
@@ -580,8 +585,8 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                     R.id.navigation_download_child,
                     R.id.navigation_download_queue
                 ) -> {
-                    navRailView.menu.findItem(R.id.navigation_downloads).isChecked = true
-                    navView.menu.findItem(R.id.navigation_downloads).isChecked = true
+                    navRailView.menu.findItem(R.id.navigation_downloads)?.isChecked = true
+                    navView.menu.findItem(R.id.navigation_downloads)?.isChecked = true
                 }
 
                 in listOf(
@@ -598,8 +603,8 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
                     R.id.navigation_settings_plugins,
                     R.id.navigation_test_providers
                 ) -> {
-                    navRailView.menu.findItem(R.id.navigation_settings).isChecked = true
-                    navView.menu.findItem(R.id.navigation_settings).isChecked = true
+                    navRailView.menu.findItem(R.id.navigation_settings)?.isChecked = true
+                    navView.menu.findItem(R.id.navigation_settings)?.isChecked = true
                 }
             }
         }
@@ -1289,12 +1294,23 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
         if (savedInstanceState == null) CineVaultIntro.playOnce(this)
 
         binding?.apply {
-            fixSystemBarsPadding(
-                navView,
-                heightResId = R.dimen.nav_view_height,
-                padTop = false,
-                overlayCutout = false
-            )
+            // The bottom nav is a floating pill, so push it above the system bars
+            // with margins instead of padding it like the old full-width bar.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val side = resources.getDimensionPixelSize(R.dimen.nav_pill_margin_horizontal)
+                val bottom = resources.getDimensionPixelSize(R.dimen.nav_pill_margin_bottom)
+                ViewCompat.setOnApplyWindowInsetsListener(navView) { view, windowInsets ->
+                    val insets = windowInsets.getInsets(
+                        WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+                    )
+                    view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                        leftMargin = side + insets.left
+                        rightMargin = side + insets.right
+                        bottomMargin = bottom + insets.bottom
+                    }
+                    windowInsets
+                }
+            }
 
             fixSystemBarsPadding(
                 navRailView,
@@ -1708,11 +1724,10 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
             .setPopUpTo(navController.graph.startDestination, false)
             .build()*/
 
-        val rippleColor = ColorStateList.valueOf(getResourceColor(R.attr.colorPrimary, 0.1f))
-
         binding?.navView?.apply {
-            itemRippleColor = rippleColor
-            itemActiveIndicatorColor = rippleColor
+            val pillHighlight = ColorStateList.valueOf(getColor(R.color.navIndicator))
+            itemRippleColor = pillHighlight
+            itemActiveIndicatorColor = pillHighlight
             setupWithNavController(navController)
             setOnItemSelectedListener { item ->
                 onNavDestinationSelected(
@@ -1725,8 +1740,9 @@ class MainActivity : AppCompatActivity(), ColorPickerDialogListener, BiometricCa
 
         binding?.navRailView?.apply {
             if (isLayout(PHONE)) {
-                itemRippleColor = rippleColor
-                itemActiveIndicatorColor = rippleColor
+                val railHighlight = ColorStateList.valueOf(getColor(R.color.navIndicator))
+                itemRippleColor = railHighlight
+                itemActiveIndicatorColor = railHighlight
             } else {
                 val rippleColor = ColorStateList.valueOf(getResourceColor(R.attr.textColor, 1.0f))
                 val rippleColorTransparent =

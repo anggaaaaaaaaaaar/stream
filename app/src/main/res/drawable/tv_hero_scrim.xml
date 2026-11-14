@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TV hero: dark from the left so the info block reads, plus a short fade at the bottom into the rows -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <gradient
+                android:angle="0"
+                android:centerColor="#990A0E17"
+                android:centerX="0.35"
+                android:endColor="#000A0E17"
+                android:startColor="#F20A0E17" />
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <gradient
+                android:angle="90"
+                android:centerColor="#000A0E17"
+                android:centerY="0.3"
+                android:endColor="#000A0E17"
+                android:startColor="?attr/primaryBlackBackground" />
+        </shape>
+    </item>
+</layer-list>

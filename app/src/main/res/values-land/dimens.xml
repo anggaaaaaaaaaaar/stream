@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Landscape phones and tablets: keep the hero inside one screen height -->
+    <dimen name="hero_height">440dp</dimen>
+</resources>

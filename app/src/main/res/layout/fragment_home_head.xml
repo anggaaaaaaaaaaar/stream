@@ -16,7 +16,7 @@
     <FrameLayout
         android:id="@+id/home_preview_viewpager_text"
         android:layout_width="match_parent"
-        android:layout_height="500dp">
+        android:layout_height="@dimen/hero_height">
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/home_preview_viewpager"
@@ -46,7 +46,7 @@
                 android:editTextColor="@color/white"
                 android:gravity="center_vertical"
                 android:iconifiedByDefault="true"
-                android:nextFocusRight="@id/home_head_profile_padding"
+                android:nextFocusRight="@id/home_head_downloads"
                 android:padding="0dp"
                 android:textColor="@color/white"
                 android:textColorHint="@color/white"
@@ -57,6 +57,21 @@
                 app:searchIcon="@drawable/search_icon"
                 tools:ignore="RtlSymmetry" />
 
+            <!-- Downloads left the phone bottom bar (5 item limit), so it lives here -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/home_head_downloads"
+                style="@style/HeroCircleButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="4dp"
+                android:contentDescription="@string/title_downloads"
+                android:nextFocusLeft="@id/home_search"
+                android:nextFocusRight="@id/home_head_profile_padding"
+                app:cornerRadius="20dp"
+                app:icon="@drawable/netflix_download"
+                app:iconSize="20dp"
+                app:strokeWidth="0dp" />
+
             <LinearLayout
                 android:id="@+id/home_head_profile_padding"
                 android:layout_width="50dp"
@@ -65,7 +80,7 @@
                 android:focusable="true"
                 android:foreground="@drawable/rounded_select_ripple"
                 android:gravity="center"
-                android:nextFocusLeft="@id/home_search"
+                android:nextFocusLeft="@id/home_head_downloads"
                 android:orientation="horizontal">
 
                 <androidx.cardview.widget.CardView
@@ -110,49 +125,50 @@
         <LinearLayout
             android:id="@+id/home_preview_title_holder"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:gravity="center"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/hero_side_padding"
+            android:paddingBottom="28dp">
 
-            <TextView
-                android:id="@+id/home_preview_bookmark"
-                android:layout_width="70dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginStart="25dp"
-                android:layout_marginEnd="25dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:gravity="center"
-                android:text="@string/none"
-                android:textColor="?attr/white"
-                app:drawableTint="?attr/white"
-                app:drawableTopCompat="@drawable/ic_baseline_add_24"
-                app:tint="?attr/white" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/home_preview_play"
-                style="@style/WhiteButton"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/home_preview_play"
+                    style="@style/HeroPlayButton"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:nextFocusRight="@id/home_preview_bookmark"
+                    android:text="@string/home_play"
+                    app:icon="@drawable/ic_baseline_play_arrow_24" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/home_preview_bookmark"
+                    style="@style/HeroCircleButton"
+                    android:contentDescription="@string/action_add_to_bookmarks"
+                    android:nextFocusLeft="@id/home_preview_play"
+                    android:nextFocusRight="@id/home_preview_info"
+                    app:icon="@drawable/ic_baseline_add_24" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/home_preview_info"
+                    style="@style/HeroCircleButton"
+                    android:contentDescription="@string/home_info"
+                    android:nextFocusLeft="@id/home_preview_bookmark"
+                    app:icon="@drawable/ic_outline_info_24" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/home_preview_dots"
                 android:layout_width="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/home_play"
-                app:icon="@drawable/ic_baseline_play_arrow_24" />
-
-            <TextView
-                android:id="@+id/home_preview_info"
-                android:layout_width="70dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginStart="25dp"
-                android:layout_marginEnd="25dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:gravity="center"
-                android:text="@string/home_info"
-                android:textColor="?attr/white"
-                app:drawableTint="?attr/white"
-                app:drawableTopCompat="@drawable/ic_outline_info_24"
-                app:tint="?attr/white" />
-
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal" />
         </LinearLayout>
 
     </FrameLayout>
