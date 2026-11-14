@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/primaryBlackBackground"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/hero_side_padding"
+        android:paddingTop="16dp"
+        android:paddingBottom="14dp"
+        android:text="@string/title_browse"
+        android:textColor="?attr/white"
+        android:textSize="32sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/browse_tabs"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginHorizontal="@dimen/hero_side_padding"
+        android:background="@drawable/browse_tabs_background"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/browse_tab_movies"
+            style="@style/BrowseTab"
+            android:nextFocusRight="@id/browse_tab_series"
+            android:text="@string/movies" />
+
+        <TextView
+            android:id="@+id/browse_tab_series"
+            style="@style/BrowseTab"
+            android:nextFocusLeft="@id/browse_tab_movies"
+            android:nextFocusRight="@id/browse_tab_anime"
+            android:text="@string/tv_series" />
+
+        <TextView
+            android:id="@+id/browse_tab_anime"
+            style="@style/BrowseTab"
+            android:nextFocusLeft="@id/browse_tab_series"
+            android:nextFocusRight="@id/browse_tab_others"
+            android:text="@string/anime" />
+
+        <TextView
+            android:id="@+id/browse_tab_others"
+            style="@style/BrowseTab"
+            android:nextFocusLeft="@id/browse_tab_anime"
+            android:text="@string/others" />
+    </LinearLayout>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:paddingHorizontal="@dimen/hero_side_padding"
+        android:paddingVertical="14dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/browse_filter_service"
+                style="@style/BrowseFilterChip"
+                android:nextFocusRight="@id/browse_filter_section"
+                tools:text="Service" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/browse_filter_section"
+                style="@style/BrowseFilterChip"
+                android:nextFocusLeft="@id/browse_filter_service"
+                android:nextFocusRight="@id/browse_filter_sort"
+                tools:text="Trending" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/browse_filter_sort"
+                style="@style/BrowseFilterChip"
+                android:nextFocusLeft="@id/browse_filter_section"
+                android:nextFocusRight="@id/browse_filter_year"
+                tools:text="Provider order" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/browse_filter_year"
+                style="@style/BrowseFilterChip"
+                android:nextFocusLeft="@id/browse_filter_sort"
+                android:text="@string/year" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/browse_grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="14dp"
+            android:paddingBottom="16dp"
+            tools:itemCount="9"
+            tools:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            tools:listitem="@layout/browse_grid_item"
+            tools:spanCount="3" />
+
+        <ProgressBar
+            android:id="@+id/browse_loading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/browse_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/browse_empty_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="?attr/grayTextColor"
+                android:textSize="15sp"
+                tools:text="@string/no_data" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/browse_retry"
+                style="@style/WhiteButton"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/reload_error" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

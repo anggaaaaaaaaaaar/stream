@@ -756,6 +756,44 @@
         <item name="rippleColor">@color/navIndicator</item>
     </style>
 
+    <!-- Browse screen: segmented category pills and dropdown filter chips -->
+    <style name="BrowseTab">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/browse_tab_text</item>
+        <item name="android:background">@drawable/browse_tab_selected</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="BrowseFilterChip" parent="Widget.Material3.Chip.Assist">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginEnd">10dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">?attr/textColor</item>
+        <item name="chipMinHeight">44dp</item>
+        <item name="chipMinTouchTargetSize">0dp</item>
+        <item name="chipCornerRadius">22dp</item>
+        <item name="chipBackgroundColor">@color/navPillBackground</item>
+        <item name="chipStrokeColor">@color/navPillStroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipStartPadding">14dp</item>
+        <item name="chipEndPadding">10dp</item>
+        <item name="closeIcon">@drawable/ic_baseline_keyboard_arrow_down_24</item>
+        <item name="closeIconVisible">true</item>
+        <item name="closeIconTint">?attr/textColor</item>
+        <item name="closeIconSize">20dp</item>
+        <item name="rippleColor">@color/navIndicator</item>
+        <item name="android:tag">@string/tv_no_focus_tag</item>
+    </style>
+
     <style name="NavPillIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:width">60dp</item>
         <item name="android:height">48dp</item>
