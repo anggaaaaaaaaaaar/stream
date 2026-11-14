@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Window background while the app starts. Matches the Android 12+ system splash and the first
+     frame of CineVaultIntroView, so the hand-off between them does not jump. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
-        <color android:color="?attr/primaryBlackBackground"/>
+        <color android:color="@color/ic_launcher_background" />
     </item>
-    <item android:width="150dp" android:height="150dp" android:gravity="center" android:drawable="@drawable/ic_launcher_foreground">
-    </item>
+    <item
+        android:width="@dimen/cinevault_splash_logo_size"
+        android:height="@dimen/cinevault_splash_logo_size"
+        android:drawable="@drawable/ic_cinevault_logo"
+        android:gravity="center" />
 </layer-list>
